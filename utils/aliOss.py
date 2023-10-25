@@ -42,8 +42,8 @@ def upload_file(self, path, local_path):
 
 
 if __name__ == '__main__':
-    access_id = 'LTAI5tBVwLQfjuQzuaN4hQFr'
-    access_key = 'l8hOhCQLelJcgXQUFhNvenloJYzS9o'
+    access_id = ''
+    access_key = ''
     bucket_name = 'web-tlias-kingdol'
     co = ConnectOss(access_id, access_key, bucket_name)
     print(co.get_all_file(prefix=""))
