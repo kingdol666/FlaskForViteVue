@@ -12,7 +12,16 @@ from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
 
 import websocket  # 使用websocket_client
+
+
+class myAnswers:
+    def __init__(self, answer):
+        self.answer = answer
+
+
 answer = ""
+answerDict = {}
+
 
 class Ws_Param(object):
     # 初始化
@@ -63,7 +72,7 @@ def on_error(ws, error):
 
 
 # 收到websocket关闭的处理
-def on_close(ws,one,two):
+def on_close(ws, one, two):
     print(" ")
 
 
@@ -73,7 +82,7 @@ def on_open(ws):
 
 
 def run(ws, *args):
-    data = json.dumps(gen_params(appid=ws.appid, domain= ws.domain,question=ws.question))
+    data = json.dumps(gen_params(appid=ws.appid, domain=ws.domain, question=ws.question, userId=ws.header["UserId"]))
     ws.send(data)
 
 
@@ -82,6 +91,8 @@ def on_message(ws, message):
     # print(message)
     data = json.loads(message)
     code = data['header']['code']
+    label = ws.header["UserId"]
+    # print(ws.header)
     if code != 0:
         print(f'请求错误: {code}, {data}')
         ws.close()
@@ -89,27 +100,33 @@ def on_message(ws, message):
         choices = data["payload"]["choices"]
         status = choices["status"]
         content = choices["text"][0]["content"]
-        print(content,end ="")
-        global answer
-        answer += content
+        # print(content, end="")
+        ws.header["Content"] += content
+        # print(answer)
         # print(1)
         if status == 2:
+            global answerDict
+            if label in answerDict:
+                answerDict[label].append(ws.header["Content"])
+            else:
+                answerDict[label] = [ws.header["Content"]]
+            # print(answerDict)
             ws.close()
 
 
-def gen_params(appid, domain,question):
+def gen_params(appid, domain, question, userId):
     """
     通过appid和用户的提问来生成请参数
     """
     data = {
         "header": {
             "app_id": appid,
-            "uid": "1234"
+            "uid": userId
         },
         "parameter": {
             "chat": {
                 "domain": domain,
-                "temperature": 0.5,
+                "temperature": 0.8,
                 "max_tokens": 2048
             }
         },
@@ -122,15 +139,13 @@ def gen_params(appid, domain,question):
     return data
 
 
-def main(appid, api_key, api_secret, Spark_url,domain, question):
+def main(appid, api_key, api_secret, Spark_url, domain, question, header):
     # print("星火:")
     wsParam = Ws_Param(appid, api_key, api_secret, Spark_url)
     websocket.enableTrace(False)
     wsUrl = wsParam.create_url()
-    ws = websocket.WebSocketApp(wsUrl, on_message=on_message, on_error=on_error, on_close=on_close, on_open=on_open)
+    ws = websocket.WebSocketApp(wsUrl, on_message=on_message, on_error=on_error, on_close=on_close, on_open=on_open, header=header)
     ws.appid = appid
     ws.question = question
     ws.domain = domain
     ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
-
-

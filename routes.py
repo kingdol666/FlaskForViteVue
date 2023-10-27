@@ -6,8 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from PIL import Image
 import base64
 from io import BytesIO
-
-from machineL.ModelDemo.shici import ShiCiGet
+from domain.model.MyShiCi import ShiCiGet
+from domain.model.test import myQuestion
 
 shici = ShiCiGet()
 app = Flask(__name__)
@@ -245,3 +245,22 @@ def get_shici():
         return jsonify({'text': res})
     return None
 
+
+@app.route("/get_xinghuo", methods=['POST'])
+def get_xinghuo():
+    if request.method == 'POST':  # 判断是否是 POST 请求
+        import random
+        userId = random.randint(1000, 10000)
+        print(userId)
+        userId_str = str(userId)
+        # 获取表单数据
+        text = request.form.get('text')  # 传入表单对应输入字段的 name 值
+        res = myQuestion(text, {
+            "UserId": userId_str,
+            "Content": "",
+            "Authorization": "Bearer your_token",
+            "Content-Type": "application/json"
+        })
+        print(res)
+        return jsonify({'text': res})
+    return None

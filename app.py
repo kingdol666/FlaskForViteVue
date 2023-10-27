@@ -3,4 +3,4 @@ from routes import bp
 app.register_blueprint(bp)
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(host="localhost", port=5000)
